@@ -11,22 +11,26 @@ class AppBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      splashFactory: NoSplash.splashFactory,
-      splashColor: Colors.transparent,
-      onTap: () {
-        Get.back();
-      },
-      child: Container(
-        height: AppSizes.backButtonSize,
-        width: AppSizes.backButtonSize,
-        decoration: BoxDecoration(
-          color: AppColors.bg,
-          border: Border.all(color: AppColors.dividerColor, width: 0.3),
-          borderRadius: BorderRadius.circular(AppSizes.backButtonRadius),
-        ),
-        child: Center(
-          child: Icon(Icons.keyboard_arrow_left),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AppPaddings.pagePadding, AppPaddings.small, 0.0, 0.0),
+      child: InkWell(
+        splashFactory: NoSplash.splashFactory,
+        splashColor: Colors.transparent,
+        onTap: () {
+          Get.back();
+        },
+        child: Container(
+          height: AppSizes.backButtonSize,
+          width: AppSizes.backButtonSize,
+          decoration: BoxDecoration(
+            color: AppColors.bg,
+            border: Border.all(color: AppColors.dividerColor, width: 0.3),
+            borderRadius: BorderRadius.circular(AppSizes.backButtonRadius),
+          ),
+          child: Center(
+            child: Icon(Icons.keyboard_arrow_left),
+          ),
         ),
       ),
     );

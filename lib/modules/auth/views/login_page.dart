@@ -21,69 +21,59 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            SingleChildScrollView(
-              padding: EdgeInsets.all(AppPaddings.pagePadding),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: AppPaddings.xxLarge + AppPaddings.large),
-                    Text(AppStrings.login, style: AppTextStyles.f24w600),
-                    SizedBox(height: AppSizes.s4),
-                    Text(AppStrings.loginSubTitle,
-                        style: AppTextStyles.f14w400.copyWith(
-                          color: AppColors.greyTextColor,
-                        )),
-                    SizedBox(height: AppPaddings.xLarge),
-                    AppTextField(
-                      titleText: AppStrings.email,
-                      hintText: AppStrings.emailHint,
-                      controller: emailController,
-                      validator: FormValidators.emailValidator,
-                    ),
-                    SizedBox(height: AppPaddings.medium),
-                    AppTextField(
-                      titleText: AppStrings.password,
-                      hintText: AppStrings.passwordHint,
-                      controller: passwordController,
-                      isPassword: true,
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'Enter password'
-                          : null,
-                    ),
-                    SizedBox(height: AppPaddings.medium),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: InkWell(
-                        onTap: () => Get.toNamed(AppRoutes.forgotPassword),
-                        child: Text(AppStrings.forgotPassword),
-                      ),
-                    ),
-                    SizedBox(height: AppPaddings.xLarge),
-                    Obx(() => AppButton(
-                          onTap: () {
-                            if (!_formKey.currentState!.validate()) return;
-                            authController.login(
-                              emailController.text.trim(),
-                              passwordController.text.trim(),
-                            );
-                          },
-                          text: AppStrings.login,
-                          isLoading: authController.isLoading.value,
-                        )),
-                  ],
+      appBar: AppBar(
+        leading: const AppBackButton(),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(AppPaddings.pagePadding),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(AppStrings.login, style: AppTextStyles.f24w600),
+              SizedBox(height: AppSizes.s4),
+              Text(AppStrings.loginSubTitle,
+                  style: AppTextStyles.f14w400.copyWith(
+                    color: AppColors.greyTextColor,
+                  )),
+              SizedBox(height: AppPaddings.xLarge),
+              AppTextField(
+                titleText: AppStrings.email,
+                hintText: AppStrings.emailHint,
+                controller: emailController,
+                validator: FormValidators.emailValidator,
+              ),
+              AppTextField(
+                titleText: AppStrings.password,
+                hintText: AppStrings.passwordHint,
+                controller: passwordController,
+                isPassword: true,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Enter password' : null,
+              ),
+              SizedBox(height: AppPaddings.medium),
+              Align(
+                alignment: Alignment.centerRight,
+                child: InkWell(
+                  onTap: () => Get.toNamed(AppRoutes.forgotPassword),
+                  child: Text(AppStrings.forgotPassword),
                 ),
               ),
-            ),
-            Positioned(
-                left: AppPaddings.pagePadding,
-                top: AppPaddings.pagePadding,
-                child: AppBackButton()),
-          ],
+              SizedBox(height: AppPaddings.xLarge),
+              Obx(() => AppButton(
+                    onTap: () {
+                      if (!_formKey.currentState!.validate()) return;
+                      authController.login(
+                        emailController.text.trim(),
+                        passwordController.text.trim(),
+                      );
+                    },
+                    text: AppStrings.login,
+                    isLoading: authController.isLoading.value,
+                  )),
+            ],
+          ),
         ),
       ),
     );

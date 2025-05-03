@@ -41,6 +41,7 @@ class ApiClient {
 
   Future<Map<String, String>> _buildHeaders() async {
     final token = await SharedPrefs.getAuthToken();
+    debugPrint("$token");
     return {
       'Content-Type': 'application/json',
       if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
@@ -76,56 +77,55 @@ class ApiClient {
       throw ApiException.fromDioError(e);
     }
   }
- Future<Response> postWithImage(
-  String path, {
-  Map<String, dynamic>? data,
-  List<File>? images, // <--- Accept List<File> now
-}) async {
-  _logRequest('POST', path, data: data);
-  print("images = $images");
-  try {
-    final headers = await _buildHeaders();
 
-    dynamic requestData;
+  Future<Response> postWithImage(
+    String path, {
+    Map<String, dynamic>? data,
+    List<File>? images, // <--- Accept List<File> now
+  }) async {
+    _logRequest('POST', path, data: data);
+    print("images = $images");
+    try {
+      final headers = await _buildHeaders();
 
-    if (images != null && images.isNotEmpty) {
-      // Create a list of MultipartFile
-      List<MultipartFile> multipartImages = await Future.wait(
-        images.map((image) async {
-          final fileName = image.path.split('/').last;
-          return await MultipartFile.fromFile(
-            image.path,
-            filename: fileName,
-          );
-        }),
+      dynamic requestData;
+
+      if (images != null && images.isNotEmpty) {
+        // Create a list of MultipartFile
+        List<MultipartFile> multipartImages = await Future.wait(
+          images.map((image) async {
+            final fileName = image.path.split('/').last;
+            return await MultipartFile.fromFile(
+              image.path,
+              filename: fileName,
+            );
+          }),
+        );
+
+        requestData = FormData.fromMap({
+          ...?data,
+          'images': multipartImages, // List<MultipartFile>
+        });
+      } else {
+        requestData = data;
+      }
+
+      final response = await _dio.post(
+        path,
+        data: requestData,
+        options: Options(headers: headers),
       );
 
-      requestData = FormData.fromMap({
-        ...?data,
-        'images': multipartImages, // List<MultipartFile>
-      });
-    } else {
-      requestData = data;
+      _logResponse(response);
+      return response;
+    } on DioException catch (e) {
+      _logError(e);
+      if (e.response != null && e.response!.statusCode == 400) {
+        return e.response!;
+      }
+      throw ApiException.fromDioError(e);
     }
-
-    final response = await _dio.post(
-      path,
-      data: requestData,
-      options: Options(headers: headers),
-    );
-
-    _logResponse(response);
-    return response;
-  } on DioException catch (e) {
-    _logError(e);
-    if (e.response != null && e.response!.statusCode == 400) {
-      return e.response!;
-    }
-    throw ApiException.fromDioError(e);
   }
-}
-
-
 
   Future<Response> put(String path, {Map<String, dynamic>? data}) async {
     _logRequest('PUT', path, data: data);
@@ -154,8 +154,9 @@ class ApiClient {
       throw ApiException.fromDioError(e);
     }
   }
-   Future<Response> delete(String path, {Map<String, dynamic>? data}) async {
-    _logRequest('PATCH', path, data: data);
+
+  Future<Response> delete(String path, {Map<String, dynamic>? data}) async {
+    _logRequest('DELETE', path, data: data);
     try {
       final headers = await _buildHeaders();
       final response = await _dio.delete(path,

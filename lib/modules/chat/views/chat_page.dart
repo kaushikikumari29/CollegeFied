@@ -2,7 +2,6 @@ import 'package:collegefied/data/models/chart_model.dart';
 import 'package:collegefied/modules/chat/views/controller/chart_controller.dart';
 import 'package:collegefied/modules/product/controllers/product_controller.dart';
 import 'package:collegefied/shared/utils/app_paddings.dart';
-import 'package:collegefied/shared/utils/app_sizes.dart';
 import 'package:collegefied/shared/utils/app_text_styles.dart';
 import 'package:collegefied/shared/widgets/app_back_button.dart';
 import 'package:flutter/material.dart';
@@ -16,33 +15,39 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  final TextEditingController _controller = TextEditingController();
-  String productName = '';
-  int chartId = 0;
-  String groupName = '';
-  String requestiD='';
-  int sellerId=0;
-  bool isActive=false;
+  final TextEditingController _messageController = TextEditingController();
   final ChartController _chartController = Get.put(ChartController());
   final ProductController _productController = Get.put(ProductController());
+
+  late final String productName;
+  late final int chartId;
+  late final String groupName;
+  late final String requestId;
+  late final int sellerId;
+  late final bool isActive;
+
   @override
   void initState() {
-    productName = Get.arguments[0];
-    chartId = Get.arguments[1];
-    groupName = Get.arguments[2];
-    requestiD=Get.arguments[3]??'';
-    sellerId=Get.arguments[4]??0;
-    isActive=Get.arguments[5]??false;
-    print("seeler id =$sellerId");
-    _chartController.fetchMessage(chartId.toString(), groupName);
     super.initState();
+    final args = Get.arguments;
+    productName = args[0];
+    chartId = args[1];
+    groupName = args[2];
+    requestId = args[3] ?? '';
+    sellerId = args[4] ?? 0;
+    isActive = args[5] ?? false;
+
+    debugPrint("Seller ID: $sellerId");
+
+    _chartController.fetchMessage(chartId.toString(), groupName);
   }
 
   void _sendMessage() {
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
-    _controller.clear();
-    _chartController.sendMessage(text);
+    final message = _messageController.text.trim();
+    if (message.isEmpty) return;
+
+    _messageController.clear();
+    _chartController.sendMessage(message);
   }
 
   Widget _buildMessage(String message, bool isMe) {
@@ -51,7 +56,8 @@ class _ChatPageState extends State<ChatPage> {
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.7),
         decoration: BoxDecoration(
           color: isMe ? Colors.blueAccent : Colors.grey.shade300,
           borderRadius: BorderRadius.only(
@@ -69,75 +75,70 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
+  Widget _buildApprovalActions() {
+    final isMyChat = _chartController.myUserI.value == sellerId;
+
+    if (!isActive || !isMyChat) return const SizedBox();
+
+    return Row(
+      children: [
+        IconButton(
+          icon: const Icon(Icons.check, size: 20, color: Colors.green),
+          onPressed: () => _productController.updateRequest(
+            requestId: int.parse(requestId),
+            status: 'approved',
+          ),
+        ),
+        IconButton(
+          icon: const Icon(Icons.close, size: 20, color: Colors.red),
+          onPressed: () => _productController.updateRequest(
+            requestId: int.parse(requestId),
+            status: 'rejected',
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: AppBackButton(),
-        title: Row(
-          children: [
-            Text(
-              productName,
-              style: AppTextStyles.f16w500,
-            ),
-          ],
-        ),
-         actions: [
-
-      isActive?    Obx(() {
-              return _chartController.myUserI.value!=sellerId? SizedBox():   InkWell(
-            onTap: (){
-_productController.updateRequest(
-  requestId: int.parse(requestiD), 
-  status: 'approved');
-            },
-            child: Icon(Icons.check,size:20,color: Colors.green,));
-
-          }):SizedBox()
-      ,
-          SizedBox(width: 20,),
-    
-     isActive?  Obx(() {
-              return _chartController.myUserI.value!=sellerId? SizedBox():   InkWell(
-            onTap: (){
-_productController.updateRequest(
-  requestId: int.parse(requestiD), 
-  status: 'rejected');
-            },
-            child:  Icon(Icons.close,size:20,color: Colors.red,));
-
-          }):SizedBox(),
- 
-              SizedBox(width: 20,),
+        leading: const AppBackButton(),
+        title: Text(productName, style: AppTextStyles.f16w500),
+        actions: [
+          Obx(() => _buildApprovalActions()),
+          const SizedBox(width: 20)
         ],
       ),
       body: Column(
         children: [
           Expanded(
             child: Obx(() {
-              return _chartController.messageList.isEmpty
-                  ? Center(child: Text("No Message"))
-                  : AnimatedList(
-                      key: _chartController.listKey,
-                      reverse: true,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      initialItemCount: _chartController.messageList.length,
-                      itemBuilder: (context, index, animation) {
-                        ChartModel chartModel = _chartController.messageList[index];
-                        return SlideTransition(
-                          position: animation.drive(
-                            Tween<Offset>(
-                              begin: const Offset(1, 0),
-                              end: Offset.zero,
-                            ).chain(CurveTween(curve: Curves.easeOut)),
-                          ),
-                          child: _buildMessage(
-                            chartModel.message,
-                            chartModel.isMe,
-                          ),
-                        );
-                      },
-                    );
+              final messages = _chartController.messageList;
+
+              if (messages.isEmpty) {
+                return const Center(child: Text("No Message"));
+              }
+
+              return AnimatedList(
+                key: _chartController.listKey,
+                reverse: true,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                initialItemCount: messages.length,
+                itemBuilder: (context, index, animation) {
+                  final message = messages[index];
+                  return SlideTransition(
+                    position: animation.drive(
+                      Tween<Offset>(
+                        begin: const Offset(1, 0),
+                        end: Offset.zero,
+                      ).chain(CurveTween(curve: Curves.easeOut)),
+                    ),
+                    child: _buildMessage(message.message, message.isMe),
+                  );
+                },
+              );
             }),
           ),
           Container(
@@ -147,7 +148,7 @@ _productController.updateRequest(
               AppPaddings.medium,
               AppPaddings.medium,
             ),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.white,
               boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
             ),
@@ -156,30 +157,30 @@ _productController.updateRequest(
                 Expanded(
                   child: TextField(
                     enabled: isActive,
-                    controller: _controller,
-                    decoration:  InputDecoration(
-                      hintText:isActive? 'Type a message...':"Chat has been closed",
+                    controller: _messageController,
+                    decoration: InputDecoration(
+                      hintText: isActive
+                          ? 'Type a message...'
+                          : "Chat has been closed",
                       border: InputBorder.none,
                     ),
                     onSubmitted: (_) => _sendMessage(),
                   ),
                 ),
-        isActive?        GestureDetector(
-                  onTap: _sendMessage,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.blueAccent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.send,
-                      color: Colors.white,
-                      size: 18,
+                if (isActive)
+                  GestureDetector(
+                    onTap: _sendMessage,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      padding: const EdgeInsets.all(10),
+                      decoration: const BoxDecoration(
+                        color: Colors.blueAccent,
+                        shape: BoxShape.circle,
+                      ),
+                      child:
+                          const Icon(Icons.send, color: Colors.white, size: 18),
                     ),
                   ),
-                ):SizedBox(),
               ],
             ),
           ),
@@ -191,6 +192,7 @@ _productController.updateRequest(
   @override
   void dispose() {
     _chartController.disconnectSocket();
+    _messageController.dispose();
     super.dispose();
   }
 }

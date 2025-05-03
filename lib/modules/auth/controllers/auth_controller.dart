@@ -74,7 +74,7 @@ class AuthController extends GetxController {
         Get.snackbar("Success", data['msg'] ?? '');
         await SharedPrefs.saveAuthToken(data['token']['access']);
         await SharedPrefs.saveUserId(data['user_id']);
-        Get.toNamed(AppRoutes.home);
+        Get.offAllNamed(AppRoutes.home);
       } else {
         Get.snackbar("Error", data['detail'] ?? 'Invalid credentials');
       }
@@ -102,7 +102,7 @@ class AuthController extends GetxController {
       final data = response.data;
       if (response.statusCode == 200) {
         Get.snackbar('Success', data['msg'] ?? 'OTP Verified');
-        Get.toNamed(AppRoutes.resetPassword);
+        Get.offAllNamed(AppRoutes.home);
       } else {
         Get.snackbar('Error', data['detail'] ?? 'Invalid OTP');
       }

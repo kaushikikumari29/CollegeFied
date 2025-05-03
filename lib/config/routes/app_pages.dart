@@ -10,6 +10,8 @@ import 'package:collegefied/modules/chat/views/charts_list.dart';
 
 import 'package:collegefied/modules/chat/views/manage_request_page.dart';
 import 'package:collegefied/modules/chat/views/chat_page.dart';
+import 'package:collegefied/modules/history/binding/history_binding.dart';
+import 'package:collegefied/modules/history/views/history_page.dart';
 import 'package:collegefied/modules/home/views/home_page.dart';
 import 'package:collegefied/modules/product/binding/product_binding.dart';
 import 'package:collegefied/modules/product/views/create_product_page.dart';
@@ -103,5 +105,11 @@ class AppPages {
       page: () => ChartsList(),
       binding: AuthBinding(),
     ),
+    GetPage(
+      name: AppRoutes.history,
+      page: () => HistoryPage(),
+      binding: HistoryBinding(),
+    ),
+
   ];
 }

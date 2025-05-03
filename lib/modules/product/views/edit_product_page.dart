@@ -11,7 +11,6 @@ import 'package:collegefied/shared/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-
 class EditProductPage extends StatefulWidget {
   String title;
   String description;
@@ -125,18 +124,21 @@ class _EditProductPageState extends State<EditProductPage> {
                           borderRadius: BorderRadius.circular(8.0),
                           border: Border.all(color: Colors.grey.shade300),
                         ),
-                        padding: EdgeInsets.symmetric(horizontal: AppPaddings.pagePadding, ),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: AppPaddings.pagePadding,
+                        ),
                         child: DropdownButton<String>(
                           isExpanded: true,
-                          hint: Text("Select Category", style: AppTextStyles.f14w400),
+                          hint: Text("Select Category",
+                              style: AppTextStyles.f14w400),
                           value: selectedCategory,
                           onChanged: (String? newValue) {
                             setState(() {
                               selectedCategory = newValue;
                               selectedCategoryId = _productController.categories
-                                  .firstWhere(
-                                      (category) => category['name'] == selectedCategory)
-                                  ['id']
+                                  .firstWhere((category) =>
+                                      category['name'] ==
+                                      selectedCategory)['id']
                                   .toString(); // Set selected category ID
                             });
                           },
@@ -144,7 +146,8 @@ class _EditProductPageState extends State<EditProductPage> {
                               .map<DropdownMenuItem<String>>((category) {
                             return DropdownMenuItem<String>(
                               value: category['name'],
-                              child: Text(category['name'], style: AppTextStyles.f14w400),
+                              child: Text(category['name'],
+                                  style: AppTextStyles.f14w400),
                             );
                           }).toList(),
                           underline: SizedBox(),
@@ -176,7 +179,8 @@ class _EditProductPageState extends State<EditProductPage> {
                     SizedBox(height: AppSizes.s12 + AppSizes.s6),
                     Obx(() => AppButton(
                           onTap: () async {
-                            await _productController.deleteProduct(productId: widget.id);
+                            await _productController.deleteProduct(
+                                productId: widget.id);
                             Navigator.pop(context);
                           },
                           text: 'Delete Product',

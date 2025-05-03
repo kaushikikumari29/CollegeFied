@@ -18,5 +18,7 @@ class AppSizes {
   static const double backButtonRadius = 8.0;
   static const double backButtonSize = 35.0;
   static const double appLogo = 50.0;
+  static const double textFieldCursorHeight = 16.0;
+  static const double profileImageRadius = 55.0;
 
 }

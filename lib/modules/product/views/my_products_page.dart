@@ -1,6 +1,11 @@
 import 'package:collegefied/modules/product/controllers/product_controller.dart';
-import 'package:collegefied/modules/product/views/create_product_page.dart';
 import 'package:collegefied/modules/product/views/edit_product_page.dart';
+import 'package:collegefied/shared/usecases/usecases.dart';
+import 'package:collegefied/shared/utils/app_images.dart';
+import 'package:collegefied/shared/widgets/app_back_button.dart';
+import 'package:collegefied/shared/widgets/app_data_states/empty_state.dart';
+import 'package:collegefied/shared/widgets/app_data_states/loading_state.dart';
+import 'package:collegefied/shared/widgets/app_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:collegefied/config/routes/app_routes.dart';
@@ -10,62 +15,106 @@ import 'package:collegefied/shared/utils/app_sizes.dart';
 import 'package:collegefied/shared/utils/app_text_styles.dart';
 import 'package:collegefied/shared/widgets/app_button.dart';
 
-class MyProductPage extends StatelessWidget {
+class MyProductPage extends StatefulWidget {
   const MyProductPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = Get.find<ProductController>();
+  State<MyProductPage> createState() => _MyProductPageState();
+}
 
-    if (controller.products.isEmpty) {
-      controller.getMyProducts();
+class _MyProductPageState extends State<MyProductPage> {
+  final controller = Get.find<ProductController>();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (controller.products.isEmpty) {
+        controller.getMyProducts();
+      }
+    });
+  }
+
+  Color _getStatusColor(String status) {
+    switch (ProductStatus.values
+        .firstWhere((e) => e.toString().split('.').last == status)) {
+      case ProductStatus.available:
+        return AppColors.availableProduct;
+      case ProductStatus.reserved:
+        return AppColors.reservedProduct;
+      case ProductStatus.unavailable:
+        return AppColors.unavailableProduct;
+      case ProductStatus.sold:
+        return AppColors.soldProduct;
+      default:
+        return AppColors.availableProduct;
     }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("My Products"),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        leading: const AppBackButton(),
+        centerTitle: true,
+        title: Padding(
+          padding: const EdgeInsets.only(top: AppPaddings.small),
+          child: Text(
+            "My Products",
+            style: AppTextStyles.f18w600,
+          ),
+        ),
       ),
       body: Obx(() {
         if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+            child: LoadingState(lottieAsset: AppImages.loadingLottie),
+          );
         } else if (controller.products.isEmpty) {
-          return const Center(child: Text('No Products Found'));
+          return Center(
+            child: EmptyDataState(
+              title: "No Products Found",
+              subtitle: "Please check back later.",
+              lottieAsset: AppImages.noDataLottie,
+            ),
+          );
         } else {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          return Stack(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.s12,
-                  vertical: AppSizes.s6,
-                ),
-                child: Text(
-                  "Products",
-                  style: AppTextStyles.f18w500.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              Expanded(
+                    vertical: AppPaddings.pagePadding),
                 child: GridView.builder(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.s12, vertical: AppSizes.s6),
+                    horizontal: AppPaddings.pagePadding,
+                    vertical: AppSizes.s6,
+                  ),
                   physics: const BouncingScrollPhysics(),
                   itemCount: controller.products.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 12,
                     crossAxisSpacing: 12,
-                    childAspectRatio: 0.7,
+                    childAspectRatio: 0.64,
                   ),
                   itemBuilder: (context, index) {
-                    final Map<String, dynamic> product = controller.products[index];
-                    return _productTile(product,context);
+                    final product = controller.products[index];
+                    return _productTile(product);
                   },
                 ),
               ),
+
+              // Full screen loader during delete
+              Obx(() => controller.isDeleting.value
+                  ? Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.1),
+                        child: Center(
+                            child: LoadingState(
+                                lottieAsset: AppImages.loadingLottie)),
+                      ),
+                    )
+                  : SizedBox.shrink()),
             ],
           );
         }
@@ -73,53 +122,71 @@ class MyProductPage extends StatelessWidget {
     );
   }
 
-  Widget _productTile(Map<String, dynamic> product,context) {
+  Widget _productTile(Map<String, dynamic> product) {
     final String title = product['title'] ?? 'No title';
     final String subTitle = product['description'] ?? 'No description';
     final String price = product['price']?.toString() ?? 'N/A';
     final String discount = product['discount'] ?? '';
     final String imageUrl = _getImageUrl(product);
-    final int id=product['id'];
-    final String status=product['status'];
-    final String catId=product['category']['id'].toString();
-    // final String image=product['images'].first??'';
+    final int id = product['id'];
+    final String status = product['status'];
+    final String catId = product['category']['id'].toString();
+
+    final statusColor = _getStatusColor(status);
 
     return InkWell(
       onTap: () {
-        Get.toNamed(AppRoutes.productDetail,
-        arguments: {
-          'id':id
-        }
-        
-        );
+        Get.toNamed(AppRoutes.productDetail, arguments: {'id': id});
       },
       child: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSizes.s6),
-              color: AppColors.bg,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.greyTextColor.withOpacity(0.8),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildImage(imageUrl),
-                _buildInfoSection(title, subTitle, price,context,id,
-                status,
-                catId
-                ),
-              ],
-            ),
+          _buildProductContainer(
+            imageUrl,
+            title,
+            subTitle,
+            price,
+            id,
+            status,
+            catId,
+            statusColor,
           ),
           _buildDiscountBadge(discount),
+          _buildEditProductButton(title, subTitle, price, id, catId),
+          _buildDeleteProductButton(id),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductContainer(
+    String imageUrl,
+    String title,
+    String subTitle,
+    String price,
+    int id,
+    String status,
+    String catId,
+    Color statusColor,
+  ) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppSizes.s6),
+        color: AppColors.bg,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.greyTextColor.withOpacity(0.2),
+            blurRadius: 20,
+            spreadRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildImage(imageUrl),
+          _buildInfoSection(
+              title, subTitle, price, id, status, catId, statusColor),
         ],
       ),
     );
@@ -127,23 +194,24 @@ class MyProductPage extends StatelessWidget {
 
   String _getImageUrl(Map<String, dynamic> product) {
     try {
-     
       final List<dynamic> images = product['images'] ?? [];
       if (images.isNotEmpty && images[0]['image'] != null) {
         return images[0]['image'];
       }
     } catch (_) {}
-    return 'https://via.placeholder.com/150';
+    return 'https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png';
   }
 
   Widget _buildImage(String imagePath) {
     return Expanded(
       child: Container(
         alignment: Alignment.center,
-        // child: Icon(Icons.image,size:60,color: Colors.black26,),
         padding: const EdgeInsets.all(AppSizes.s6),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppSizes.s6),
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(AppSizes.s6),
+            topRight: Radius.circular(AppSizes.s6),
+          ),
           image: DecorationImage(
             image: NetworkImage(imagePath),
             fit: BoxFit.cover,
@@ -153,12 +221,15 @@ class MyProductPage extends StatelessWidget {
     );
   }
 
-  Widget _buildInfoSection(String title, String subTitle, String price,BuildContext context, int id,
-  
-  String status,
-  String categoryId
-  
-   ) {
+  Widget _buildInfoSection(
+    String title,
+    String subTitle,
+    String price,
+    int id,
+    String status,
+    String categoryId,
+    Color statusColor,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -167,60 +238,16 @@ class MyProductPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _infoText(title, AppTextStyles.f16w600, AppColors.darkGreyTextColor),
-              _infoText(subTitle, AppTextStyles.f14w400, AppColors.darkGreyTextColor),
-              _infoText(price, AppTextStyles.f14w400, AppColors.darkGreyTextColor),
+              _infoText(
+                  title, AppTextStyles.f16w600, AppColors.darkGreyTextColor),
+              _infoText(capitalizeFirstLetter(status), AppTextStyles.f14w600,
+                  statusColor),
+              _infoText("₹$price", AppTextStyles.f14w400,
+                  AppColors.darkGreyTextColor),
             ],
           ),
         ),
-     status=='sold'? _button(
-            
-            "Sold out"
-            , AppColors.darkGreyTextColor, AppColors.primary, 
-           (){
-          
-           },
-          isBold: true):
-         
-     
-     
-         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _button("Edit", AppColors.primary, AppColors.primary, 
-            
-            (){
-              Navigator.push(context, MaterialPageRoute(builder: (context){
-                return EditProductPage(
-                  title: title,
-                  description: subTitle,
-                  price: price.toString(),
-                  id: id,
-                  categoryId: categoryId,
-                );
-              }));
-            },
-            isBold: true,
-
-
-
-            
-            ),
-          _button(
-            
-           
-            "SOLD", AppColors.primary, AppColors.primary, 
-           (){
-
-            Get.find<ProductController>().updateProduct(
-              productId: id,
-              status: "sold"
-            );
-           },
-          isBold: true),
-         
-          ],
-        ),
+        _buildActionButton(status, id),
       ],
     );
   }
@@ -234,23 +261,34 @@ class MyProductPage extends StatelessWidget {
     );
   }
 
-  Widget _button(String text, Color bgColor, Color textColor,
-  
-  Function onTap,
-   {bool isBold = false}) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(5.0, 0.0, 5.0, 5.0),
-      child: AppButton(
-        backgroundColor: bgColor,
-        // width: 60,
-        borderRadius: AppSizes.s6,
-        height: 35,
-        onTap: () {
-          onTap();
-        },
-        text: text,
-      ),
-    );
+  Widget _buildActionButton(String status, int id) {
+    return status == 'sold'
+        ? Padding(
+            padding: const EdgeInsets.all(
+              AppSizes.s4,
+            ),
+            child: AppButton(
+              text: "Sold out",
+              borderRadius: AppSizes.s6,
+              backgroundColor: AppColors.greyTextColor,
+              height: 35,
+              onTap: () {},
+            ),
+          )
+        : Padding(
+            padding: const EdgeInsets.all(
+              AppSizes.s4,
+            ),
+            child: AppButton(
+              text: "Mark as Sold",
+              borderRadius: AppSizes.s6,
+              backgroundColor: AppColors.primary,
+              height: 35,
+              onTap: () {
+                controller.updateProduct(productId: id, status: "sold");
+              },
+            ),
+          );
   }
 
   Widget _buildDiscountBadge(String discount) {
@@ -266,10 +304,108 @@ class MyProductPage extends StatelessWidget {
             topRight: Radius.circular(8),
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.s6, vertical: AppSizes.s6),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSizes.s6, vertical: AppSizes.s6),
         child: Text(
           discount,
           style: AppTextStyles.f12w900.copyWith(color: AppColors.bg),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditProductButton(
+    String title,
+    String subTitle,
+    String price,
+    int id,
+    String catId,
+  ) {
+    return Positioned(
+      left: 0,
+      child: InkWell(
+        onTap: () {
+          Get.toNamed(
+            AppRoutes.updateProduct,
+            arguments: {
+              'title': title,
+              'description': subTitle,
+              'price': price,
+              'id': id,
+              'categoryId': catId,
+            },
+          );
+        },
+        child: Container(
+          height: 28,
+          width: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(AppSizes.s6),
+              bottomRight: Radius.circular(AppSizes.s6),
+            ),
+            color: AppColors.bg,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.greyTextColor.withOpacity(0.3),
+                blurRadius: 5,
+                spreadRadius: 1,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(
+              Icons.edit,
+              size: AppSizes.s12 + AppSizes.s4,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeleteProductButton(
+    int id,
+  ) {
+    return Positioned(
+      right: 0,
+      child: InkWell(
+        onTap: () {
+          AppDialogs.showDeleteProductDialog(
+            context: context,
+            onConfirm: () async {
+              await controller.deleteProduct(productId: id);
+            },
+          );
+        },
+        child: Container(
+          height: 30,
+          width: 30,
+          decoration: BoxDecoration(
+            shape: BoxShape.rectangle,
+            borderRadius: BorderRadius.only(
+              topRight: Radius.circular(AppSizes.s6),
+              bottomLeft: Radius.circular(AppSizes.s6),
+            ),
+            color: AppColors.bg,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.greyTextColor.withOpacity(0.3),
+                blurRadius: 5,
+                spreadRadius: 1,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(
+              Icons.delete,
+              color: AppColors.error,
+              size: AppSizes.s12 + AppSizes.s4,
+            ),
+          ),
         ),
       ),
     );

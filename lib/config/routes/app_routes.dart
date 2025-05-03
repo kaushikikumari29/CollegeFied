@@ -22,4 +22,6 @@ class AppRoutes {
   static const manageRequest = '/manage_request';
     static const chatList = '/chat-list';
   static const changePassword = '/change-password';
+
+  static const history = '/history';
 }

@@ -1,7 +1,9 @@
 import 'package:collegefied/config/routes/app_routes.dart';
 import 'package:collegefied/config/theme/colors.dart';
 import 'package:collegefied/modules/home/widgets/profile_card.dart';
+import 'package:collegefied/shared/services/shared_pref.dart';
 import 'package:collegefied/shared/utils/app_text_styles.dart';
+import 'package:collegefied/shared/widgets/app_dialogs.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -79,7 +81,7 @@ class HomeDrawer extends StatelessWidget {
             },
             trailing: Icon(Icons.keyboard_arrow_right),
           ),
-           Divider(
+          Divider(
             color: AppColors.dividerColor,
             height: 0,
           ),
@@ -104,7 +106,7 @@ class HomeDrawer extends StatelessWidget {
               style: AppTextStyles.f14w500,
             ),
             onTap: () {
-              Get.toNamed(AppRoutes.profile);
+              Get.toNamed(AppRoutes.history);
             },
             trailing: Icon(Icons.keyboard_arrow_right),
           ),
@@ -133,8 +135,12 @@ class HomeDrawer extends StatelessWidget {
               style: AppTextStyles.f14w500,
             ),
             onTap: () {
-              Get.back();
-              Get.offAllNamed(AppRoutes.login);
+              AppDialogs.showLogoutDialog(
+                context: context,
+                onConfirm: () async {
+                  SharedPrefs.logout();
+                },
+              );
             },
             trailing: Icon(Icons.keyboard_arrow_right),
           ),

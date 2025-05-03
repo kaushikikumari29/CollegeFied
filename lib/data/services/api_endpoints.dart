@@ -36,4 +36,6 @@ class ApiEndpoints {
   static const String receivedRequested='api/user/requests/made/';
   static const String chartsList='/chat/chats/';
   static const String messagelist='/chat/message/';
+  static const String buyHistory='api/user/history/buying/';
+  static const String sellHistory='api/user/history/selling/';
 }

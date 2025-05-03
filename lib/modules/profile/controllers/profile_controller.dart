@@ -10,18 +10,22 @@ class ProfileController extends GetxController {
   final profileData = {}.obs;
   final ApiClient _apiClient = ApiClient();
 
+  /// Checks if the profile has all required fields filled and updates SharedPrefs.
+  Future<void> _checkAndSetProfileCompletion() async {
+    await SharedPrefs.saveProfileComplete(true);
+  }
+
+  /// Fetches profile data from the API and sets completion status.
   Future<void> fetchProfileData() async {
     isLoading.value = true;
-    final userId = await SharedPrefs.getUserId();
     try {
-      final response = await _apiClient.get(
-        '${ApiEndpoints.profile}/$userId',
-      );
-      print("response= $response");
+      final userId = await SharedPrefs.getUserId();
+      final response = await _apiClient.get('${ApiEndpoints.profile}/$userId');
 
       if (response.statusCode == 200) {
         profileData.value = response.data;
-        myUserId=profileData['user'];
+        myUserId = profileData['user'];
+        await _checkAndSetProfileCompletion();
       } else {
         Get.snackbar('Error', 'Failed to fetch profile');
       }
@@ -33,19 +37,21 @@ class ProfileController extends GetxController {
     }
   }
 
-
-Future<void> updateProfileData(Map<String, dynamic> updatedData) async {
+  /// Updates the profile and refreshes completion status.
+  Future<void> updateProfileData(Map<String, dynamic> updatedData) async {
     isLoading.value = true;
-    final userId = await SharedPrefs.getUserId();
     try {
+      final userId = await SharedPrefs.getUserId();
       final response = await _apiClient.patch(
         '${ApiEndpoints.profile}$userId/',
         data: updatedData,
       );
-      print("update response = $response");
 
       if (response.statusCode == 200) {
         profileData.value = response.data;
+        Get.back();
+        await fetchProfileData();
+        await _checkAndSetProfileCompletion();
         Get.snackbar('Success', 'Profile updated successfully');
       } else {
         Get.snackbar('Error', 'Failed to update profile');
@@ -57,7 +63,4 @@ Future<void> updateProfileData(Map<String, dynamic> updatedData) async {
       isLoading.value = false;
     }
   }
-
-
-
 }
