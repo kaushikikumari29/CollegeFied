@@ -125,7 +125,7 @@ class _CreateProductPageState extends State<CreateProductPage> {
                   SizedBox(height: AppPaddings.xxLarge + AppPaddings.medium),
                   Text('Sell Product', style: AppTextStyles.f24w600),
                   SizedBox(height: AppSizes.s12),
-                  SharedPrefs.isProfileComplete
+                  SharedPrefs.isProfileComplete == true
                       ? _buildCreateProductForm()
                       : _buildIncompleteProfileView(),
                 ],

@@ -22,14 +22,13 @@ class ProductController extends GetxController {
   RxBool isMyProduct = false.obs;
   final isDeleting = false.obs;
 
-
   Future<void> createProduct({
     required String title,
     required String description,
     required double price,
     required int sellerId,
     required String cateId,
-    required List<File> prodImage, // You already have the image here
+    required List<File> prodImage,
   }) async {
     isLoading.value = true;
     try {
@@ -42,7 +41,7 @@ class ProductController extends GetxController {
           ApiEndpoints.seller: sellerId,
           ApiEndpoints.categoryId: cateId,
         },
-        images: prodImage, // <-- Send the image too
+        images: prodImage,
       );
 
       if (response.statusCode == 201) {
@@ -65,7 +64,8 @@ class ProductController extends GetxController {
       required double price,
       required int sellerId,
       required int productId,
-      required String catId}) async {
+      required String catId,
+      required List<File>? images}) async {
     isLoading.value = true;
     try {
       final response = await _apiClient.patch(
@@ -78,6 +78,7 @@ class ProductController extends GetxController {
           ApiEndpoints.prodId: productId,
           ApiEndpoints.categoryId: catId
         },
+        // images: images,
       );
 
       if (response.statusCode == 200) {

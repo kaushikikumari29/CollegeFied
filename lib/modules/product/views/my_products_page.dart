@@ -321,6 +321,12 @@ class _MyProductPageState extends State<MyProductPage> {
     int id,
     String catId,
   ) {
+    final product = controller.products.firstWhere((e) => e['id'] == id);
+    final List<String> imageUrls = (product['images'] as List<dynamic>?)
+            ?.map((img) => img['image'].toString())
+            .toList() ??
+        [];
+
     return Positioned(
       left: 0,
       child: InkWell(
@@ -333,6 +339,7 @@ class _MyProductPageState extends State<MyProductPage> {
               'price': price,
               'id': id,
               'categoryId': catId,
+              'images': imageUrls,
             },
           );
         },

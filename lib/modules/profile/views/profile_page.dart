@@ -84,6 +84,12 @@ class _ProfilePageState extends State<ProfilePage> {
                 style:
                     const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               ),
+              const SizedBox(height: 5),
+              Text(
+                data['email'] ?? 'N/A',
+                style:
+                const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 4),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

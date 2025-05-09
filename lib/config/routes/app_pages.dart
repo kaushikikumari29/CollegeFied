@@ -15,6 +15,7 @@ import 'package:collegefied/modules/history/views/history_page.dart';
 import 'package:collegefied/modules/home/views/home_page.dart';
 import 'package:collegefied/modules/product/binding/product_binding.dart';
 import 'package:collegefied/modules/product/views/create_product_page.dart';
+import 'package:collegefied/modules/product/views/edit_product_page.dart';
 import 'package:collegefied/modules/product/views/my_products_page.dart';
 import 'package:collegefied/modules/product/views/product_detail_page.dart';
 import 'package:collegefied/modules/profile/bindings/profile_binding.dart';
@@ -78,7 +79,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.createProduct,
       page: () => CreateProductPage(),
-      binding: AuthBinding(),
+      binding: ProductBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.updateProduct,
+      page: () => EditProductPage(),
+      binding: ProductBinding(),
     ),
     GetPage(
       name: AppRoutes.myProductPage,
@@ -88,7 +94,7 @@ class AppPages {
     GetPage(
       name: AppRoutes.productDetail,
       page: () => ProductDetailPage(),
-      binding: AuthBinding(),
+      binding: ProductBinding(),
     ),
     GetPage(
       name: AppRoutes.chat,
@@ -100,7 +106,7 @@ class AppPages {
       page: () => ManageRequestPage(),
       binding: AuthBinding(),
     ),
-     GetPage(
+    GetPage(
       name: AppRoutes.chatList,
       page: () => ChartsList(),
       binding: AuthBinding(),
@@ -110,6 +116,5 @@ class AppPages {
       page: () => HistoryPage(),
       binding: HistoryBinding(),
     ),
-
   ];
 }
