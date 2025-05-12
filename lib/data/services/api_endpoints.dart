@@ -1,5 +1,5 @@
 class ApiEndpoints {
-  static const String baseUrl = 'http://54.147.131.51:8081/';
+  static const String baseUrl = 'http://34.201.105.52:8081/';
   static const String register = 'api/user/register/';
   static const String username = 'username';
   static const String email = 'email';

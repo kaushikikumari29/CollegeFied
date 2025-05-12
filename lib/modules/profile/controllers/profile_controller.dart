@@ -12,7 +12,13 @@ class ProfileController extends GetxController {
 
   /// Checks if the profile has all required fields filled and updates SharedPrefs.
   Future<void> _checkAndSetProfileCompletion() async {
-    await SharedPrefs.saveProfileComplete(true);
+    final hasAddress = profileData['address']?.toString().trim().isNotEmpty ?? false;
+    final hasCourse = profileData['course']?.toString().trim().isNotEmpty ?? false;
+    final hasGender = profileData['gender']?.toString().trim().isNotEmpty ?? false;
+
+    final isComplete = hasAddress && hasCourse && hasGender;
+
+    await SharedPrefs.saveProfileComplete(isComplete);
   }
 
   /// Fetches profile data from the API and sets completion status.

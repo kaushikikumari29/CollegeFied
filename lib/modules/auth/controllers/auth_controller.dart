@@ -33,7 +33,7 @@ class AuthController extends GetxController {
       final message =
           data['msg'] ?? data['detail'] ?? 'Registration Successful';
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         Get.snackbar('Success', message);
         onSuccess?.call();
         Get.toNamed(AppRoutes.otp, arguments: {
@@ -41,12 +41,14 @@ class AuthController extends GetxController {
           'password': password,
         });
       } else if (response.statusCode == 400) {
-        final usernameError = data['username']
+        final errorMessage = data['detail'] ??
+            data['username']
                 ?.toString()
                 .replaceAll('[', '')
                 .replaceAll(']', '') ??
             'Registration error';
-        Get.snackbar('Error', usernameError);
+
+        Get.snackbar('Error', errorMessage);
       }
     } catch (e) {
       final errorMessage = e is ApiException ? e.message : 'Unexpected error';
@@ -58,7 +60,7 @@ class AuthController extends GetxController {
 
   Future<void> login(String email, String password) async {
     isLoading.value = true;
-    myUserId=0;
+    myUserId = 0;
     try {
       final response = await _apiClient.post(
         ApiEndpoints.login,
@@ -71,10 +73,16 @@ class AuthController extends GetxController {
       final data = response.data;
 
       if (response.statusCode == 200) {
-        Get.snackbar("Success", data['msg'] ?? '');
-        await SharedPrefs.saveAuthToken(data['token']['access']);
-        await SharedPrefs.saveUserId(data['user_id']);
-        Get.offAllNamed(AppRoutes.home);
+        // Check if 'errors' key exists and has relevant messages
+        if (data['erors'] != null &&
+            data['erors']['non_field_errors'] != null) {
+          Get.snackbar("Error", data['erors']['non_field_errors'][0]);
+        } else {
+          Get.snackbar("Success", data['msg'] ?? '');
+          await SharedPrefs.saveAuthToken(data['token']['access']);
+          await SharedPrefs.saveUserId(data['user_id']);
+          Get.offAllNamed(AppRoutes.home);
+        }
       } else {
         Get.snackbar("Error", data['detail'] ?? 'Invalid credentials');
       }
@@ -102,7 +110,7 @@ class AuthController extends GetxController {
       final data = response.data;
       if (response.statusCode == 200) {
         Get.snackbar('Success', data['msg'] ?? 'OTP Verified');
-        Get.offAllNamed(AppRoutes.home);
+        Get.toNamed(AppRoutes.login);
       } else {
         Get.snackbar('Error', data['detail'] ?? 'Invalid OTP');
       }

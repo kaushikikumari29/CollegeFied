@@ -26,53 +26,46 @@ class OtpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: Stack(
+      appBar: AppBar(
+        backgroundColor: AppColors.bg,
+        elevation: 0,
+        leading: const AppBackButton(),
+      ),
+      body:   Padding(
+        padding: EdgeInsets.all(AppPaddings.pagePadding),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.all(AppPaddings.pagePadding),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: AppPaddings.xxLarge + AppPaddings.large),
-                  Text(AppStrings.otpVerification,
-                      style: AppTextStyles.f24w600),
-                  SizedBox(height: AppSizes.s8),
-                  Text(AppStrings.otpSentToEmail,
-                      style: AppTextStyles.f14w400
-                          .copyWith(color: AppColors.greyTextColor)),
-                  SizedBox(height: AppPaddings.xLarge),
-                  AppTextField(
-                    titleText: AppStrings.enterOtp,
-                    hintText: '',
-                    controller: otpController,
-                    keyboardType: TextInputType.number,
-                  ),
-                  SizedBox(height: AppPaddings.large),
-                  Obx(() => AppButton(
-                        text: AppStrings.verify,
-                        isLoading: authController.isLoading.value,
-                        onTap: () {
-                          if (otpController.text.trim().isEmpty) {
-                            Get.snackbar("Error", "OTP cannot be empty");
-                            return;
-                          }
+            Text(AppStrings.otpVerification,
+                style: AppTextStyles.f24w600),
+            SizedBox(height: AppSizes.s8),
+            Text(AppStrings.otpSentToEmail,
+                style: AppTextStyles.f14w400
+                    .copyWith(color: AppColors.greyTextColor)),
+            SizedBox(height: AppPaddings.xLarge),
+            AppTextField(
+              titleText: AppStrings.enterOtp,
+              hintText: '',
+              controller: otpController,
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: AppPaddings.large),
+            Obx(() => AppButton(
+              text: AppStrings.verify,
+              isLoading: authController.isLoading.value,
+              onTap: () {
+                if (otpController.text.trim().isEmpty) {
+                  Get.snackbar("Error", "OTP cannot be empty");
+                  return;
+                }
 
-                          authController.verifyOtp(
-                            email,
-                            password,
-                            otpController.text.trim(),
-                          );
-                        },
-                      )),
-                ],
-              ),
-            ),
-            Positioned(
-              left: AppPaddings.pagePadding,
-              top: AppPaddings.pagePadding,
-              child: AppBackButton(),
-            ),
+                authController.verifyOtp(
+                  email,
+                  password,
+                  otpController.text.trim(),
+                );
+              },
+            )),
           ],
         ),
       ),
