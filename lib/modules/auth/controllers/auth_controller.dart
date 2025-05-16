@@ -39,6 +39,7 @@ class AuthController extends GetxController {
         Get.toNamed(AppRoutes.otp, arguments: {
           'email': email,
           'password': password,
+          'fromResetPassword':false,
         });
       } else if (response.statusCode == 400) {
         final errorMessage = data['detail'] ??
@@ -95,14 +96,13 @@ class AuthController extends GetxController {
     }
   }
 
-  Future<void> verifyOtp(String email, String password, String otp) async {
+  Future<void> verifyOtp(String email, String otp) async {
     isLoading.value = true;
     try {
       final response = await _apiClient.post(
         ApiEndpoints.verifyOtp,
         data: {
           ApiEndpoints.email: email,
-          ApiEndpoints.password: password,
           ApiEndpoints.otp: otp,
         },
       );
@@ -121,4 +121,64 @@ class AuthController extends GetxController {
       isLoading.value = false;
     }
   }
+
+   Future<void> forgotPassword(String email) async {
+    isLoading.value = true;
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.forgotPasswordEmailRequest,
+        data: {
+          ApiEndpoints.email: email,
+          
+        },
+      );
+
+      final data = response.data;
+      if (response.statusCode == 200) {
+        Get.snackbar('Success', data['msg'] ?? 'OTP Sent On your email id');
+        Get.toNamed(AppRoutes.otp,
+        arguments: {
+          'email':email,
+          'fromResetPassword':true,
+        }
+        );
+      } else {
+        Get.snackbar('Error', data['detail'] ?? 'Request Failed');
+      }
+    } catch (e) {
+      final message = e is ApiException ? e.message : 'Unexpected error';
+      Get.snackbar('Error', message);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> resetPassword(String email, String password, String cPass, String otp) async {
+    isLoading.value = true;
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.resetPassword,
+        data: {
+          ApiEndpoints.email: email,
+          ApiEndpoints.password: password,
+          ApiEndpoints.confirmPassword:cPass,
+          ApiEndpoints.otp: otp,
+        },
+      );
+
+      final data = response.data;
+      if (response.statusCode == 200) {
+        Get.snackbar('Success', data['msg'] ?? 'OTP Verified');
+        Get.toNamed(AppRoutes.login);
+      } else {
+        Get.snackbar('Error', data['detail'] ?? 'Invalid OTP');
+      }
+    } catch (e) {
+      final message = e is ApiException ? e.message : 'Unexpected error';
+      Get.snackbar('Error', message);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
 }

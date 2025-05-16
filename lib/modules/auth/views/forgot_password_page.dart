@@ -1,5 +1,6 @@
 import 'package:collegefied/config/routes/app_routes.dart';
 import 'package:collegefied/config/theme/colors.dart';
+import 'package:collegefied/modules/auth/controllers/auth_controller.dart';
 import 'package:collegefied/shared/utils/app_paddings.dart';
 import 'package:collegefied/shared/utils/app_sizes.dart';
 import 'package:collegefied/shared/utils/app_strings.dart';
@@ -11,9 +12,14 @@ import 'package:get/get.dart';
 
 import '../../../shared/widgets/app_text_field.dart';
 
-class ForgotPasswordPage extends StatelessWidget {
-  final emailController = TextEditingController();
+class ForgotPasswordPage extends StatefulWidget {
+  @override
+  State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
+}
 
+class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
+  final emailController = TextEditingController();
+  final controller = Get.find<AuthController>();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -36,7 +42,11 @@ class ForgotPasswordPage extends StatelessWidget {
             SizedBox(height: AppPaddings.large),
             AppButton(
               text: AppStrings.sendOtp,
-              onTap: () => Get.toNamed(AppRoutes.otp),
+              onTap: () {
+                controller.forgotPassword(emailController.text);
+              }
+
+              // => Get.toNamed(AppRoutes.otp),
             ),
           ],
         ),

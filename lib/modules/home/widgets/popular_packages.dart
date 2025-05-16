@@ -2,10 +2,13 @@ import 'package:collegefied/config/routes/app_routes.dart';
 import 'package:collegefied/config/theme/colors.dart';
 import 'package:collegefied/modules/home/entities/popular_package_entity.dart';
 import 'package:collegefied/modules/product/controllers/product_controller.dart';
+import 'package:collegefied/shared/utils/app_images.dart';
 import 'package:collegefied/shared/utils/app_paddings.dart';
 import 'package:collegefied/shared/utils/app_sizes.dart';
 import 'package:collegefied/shared/utils/app_text_styles.dart';
 import 'package:collegefied/shared/widgets/app_button.dart';
+import 'package:collegefied/shared/widgets/app_data_states/empty_state.dart';
+import 'package:collegefied/shared/widgets/app_data_states/loading_state.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,26 +19,39 @@ class PopularPackages extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(() {
-      final allProducts = productController.allProducts;
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (productController.isLoading.value != true)
           Padding(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.s12, vertical: AppSizes.s6),
+                horizontal: AppSizes.s12 + AppSizes.s4, vertical: AppSizes.s6),
             child: Text(
               "Products",
               style: AppTextStyles.f18w500.copyWith(
-                color: AppColors.primary,
+                color: AppColors.darkGreyTextColor,
               ),
             ),
           ),
-          if (allProducts.isEmpty)
-            const Center(child: CircularProgressIndicator())
-          else
-            GridView.builder(
+        Obx(() {
+          final allProducts = productController.filteredProducts;
+          if (productController.isLoading.value) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 100.0),
+                child: LoadingState(lottieAsset: AppImages.loadingLottie),
+              ),
+            );
+          } else if (productController.filteredProducts.isEmpty) {
+            return Center(
+              child: EmptyDataState(
+                title: "No Products Found",
+                subtitle: "Please check back later.",
+                lottieAsset: AppImages.noDataLottie,
+              ),
+            );
+          } else {
+            return GridView.builder(
               padding: const EdgeInsets.symmetric(
                   horizontal: AppSizes.s12, vertical: AppSizes.s6),
               shrinkWrap: true,
@@ -51,8 +67,7 @@ class PopularPackages extends StatelessWidget {
                 final product = allProducts[index];
                 return InkWell(
                   onTap: () => Get.toNamed(AppRoutes.productDetail,
-                  arguments: allProducts[index]
-                  ),
+                      arguments: allProducts[index]),
                   child: Stack(
                     children: [
                       Container(
@@ -82,10 +97,11 @@ class PopularPackages extends StatelessWidget {
                   ),
                 );
               },
-            ),
-        ],
-      );
-    });
+            );
+          }
+        }),
+      ],
+    );
   }
 
   Widget _buildImage(String imagePath) {
@@ -113,8 +129,12 @@ class PopularPackages extends StatelessWidget {
         children: [
           _infoText(product['title'] ?? '', AppTextStyles.f16w600,
               AppColors.darkGreyTextColor),
-          _infoText(product['status'] ?? '', AppTextStyles.f14w400,
-             product['status'] =='available'?AppColors.success: AppColors.darkGreyTextColor),
+          _infoText(
+              product['status'] ?? '',
+              AppTextStyles.f14w400,
+              product['status'] == 'available'
+                  ? AppColors.success
+                  : AppColors.darkGreyTextColor),
           _infoText("₹${product['price'] ?? ''}", AppTextStyles.f14w400,
               AppColors.darkGreyTextColor),
           SizedBox(

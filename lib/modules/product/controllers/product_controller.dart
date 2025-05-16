@@ -11,16 +11,24 @@ import 'package:get/get.dart';
 
 class ProductController extends GetxController {
   final isLoading = false.obs;
-  final products = [].obs; // You can change the type if you have a model
-  final ApiClient _apiClient = ApiClient();
-  final categories = [].obs; // This will hold the fetched categories
+  final isDeleting = false.obs;
+  final products = [].obs;
   final allProducts = [].obs;
+  final filteredProducts = [].obs;
+  final categories = [].obs;
+  final categoryProducts = <dynamic>[].obs;
   final productDetails = {}.obs;
   final requestReceivedChart = [].obs;
   final receivedRequestChart = [].obs;
   final ProfileController _profileController = Get.put(ProfileController());
   RxBool isMyProduct = false.obs;
-  final isDeleting = false.obs;
+  final ApiClient _apiClient = ApiClient();
+
+  @override
+  void onInit() {
+    super.onInit();
+    getAllProducts();
+  }
 
   Future<void> createProduct({
     required String title,
@@ -58,14 +66,15 @@ class ProductController extends GetxController {
     }
   }
 
-  Future<void> editProduct(
-      {required String title,
-      required String description,
-      required double price,
-      required int sellerId,
-      required int productId,
-      required String catId,
-      required List<File>? images}) async {
+  Future<void> editProduct({
+    required String title,
+    required String description,
+    required double price,
+    required int sellerId,
+    required int productId,
+    required String catId,
+    required List<File>? images,
+  }) async {
     isLoading.value = true;
     try {
       final response = await _apiClient.patch(
@@ -76,16 +85,15 @@ class ProductController extends GetxController {
           ApiEndpoints.price: price,
           ApiEndpoints.seller: sellerId,
           ApiEndpoints.prodId: productId,
-          ApiEndpoints.categoryId: catId
+          ApiEndpoints.categoryId: catId,
         },
-        // images: images,
       );
 
       if (response.statusCode == 200) {
-        Get.snackbar('Success', 'Product created successfully');
+        Get.snackbar('Success', 'Product updated successfully');
         getMyProducts();
       } else {
-        Get.snackbar('Error', 'Failed to create product');
+        Get.snackbar('Error', 'Failed to update product');
       }
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Unexpected error';
@@ -149,16 +157,13 @@ class ProductController extends GetxController {
     }
   }
 
-  /// ✅ New: Fetch Products Created by Current User
   Future<void> getMyProducts() async {
     isLoading.value = true;
     try {
-      final response = await _apiClient.get(
-        '${ApiEndpoints.myProducts}',
-      );
+      final response = await _apiClient.get(ApiEndpoints.myProducts);
 
       if (response.statusCode == 200) {
-        products.value = response.data; // You can map to a model if needed
+        products.value = response.data;
       } else {
         Get.snackbar('Error', 'Failed to fetch products');
       }
@@ -171,35 +176,29 @@ class ProductController extends GetxController {
   }
 
   Future<void> getCategories() async {
-    // isLoading.value = true;
     try {
-      final response = await _apiClient.get(
-        ApiEndpoints.categoryList, // Replace with the correct endpoint
-      );
+      final response = await _apiClient.get(ApiEndpoints.categoryList);
 
       if (response.statusCode == 200) {
-        categories.value =
-            response.data; // Map this response to your model if needed
-        // Get.snackbar('Success', 'Categories fetched successfully');
+        categories.value = response.data;
       } else {
         Get.snackbar('Error', 'Failed to fetch categories');
       }
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Unexpected error';
       Get.snackbar('Error', msg);
-    } finally {
-      // isLoading.value = false;
     }
   }
 
   Future<void> getAllProducts() async {
     isLoading.value = true;
     try {
-      final response = await _apiClient
-          .get(ApiEndpoints.allProducts); // Replace with actual endpoint
+      final response = await _apiClient.get(ApiEndpoints.allProducts);
 
       if (response.statusCode == 200) {
         allProducts.value = response.data;
+        filteredProducts.value = response.data;
+        update();
       } else {
         Get.snackbar('Error', 'Failed to fetch all products');
       }
@@ -217,8 +216,7 @@ class ProductController extends GetxController {
     isLoading.value = true;
     try {
       final response = await _apiClient.post(
-        ApiEndpoints
-            .sendRequest, // Make sure this endpoint exists in ApiEndpoints
+        ApiEndpoints.sendRequest,
         data: {
           ApiEndpoints.product: productId,
         },
@@ -251,21 +249,22 @@ class ProductController extends GetxController {
     isLoading.value = true;
     try {
       final response = await _apiClient.patch(
-        ApiEndpoints
-            .cancelRequest, // Make sure this endpoint exists in ApiEndpoints
-        data: {ApiEndpoints.requestId: requestId, ApiEndpoints.status: status},
+        ApiEndpoints.cancelRequest,
+        data: {
+          ApiEndpoints.requestId: requestId,
+          ApiEndpoints.status: status,
+        },
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Request sent successfully');
-
+        Get.snackbar('Success', 'Request cancelled successfully');
         return;
       }
 
       if (response.statusCode == 400) {
-        Get.snackbar('Failed', 'Request already sent');
+        Get.snackbar('Failed', 'Request already handled');
       } else {
-        Get.snackbar('Error', 'Failed to send request');
+        Get.snackbar('Error', 'Failed to cancel request');
       }
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Unexpected error';
@@ -282,21 +281,22 @@ class ProductController extends GetxController {
     isLoading.value = true;
     try {
       final response = await _apiClient.patch(
-        ApiEndpoints
-            .updateRequest, // Make sure this endpoint exists in ApiEndpoints
-        data: {ApiEndpoints.requestId: requestId, ApiEndpoints.status: status},
+        ApiEndpoints.updateRequest,
+        data: {
+          ApiEndpoints.requestId: requestId,
+          ApiEndpoints.status: status,
+        },
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        Get.snackbar('Success', 'Request sent successfully');
-
+        Get.snackbar('Success', 'Request updated successfully');
         return;
       }
 
       if (response.statusCode == 400) {
-        Get.snackbar('Failed', 'Request already sent');
+        Get.snackbar('Failed', 'Request already handled');
       } else {
-        Get.snackbar('Error', 'Failed to send request');
+        Get.snackbar('Error', 'Failed to update request');
       }
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Unexpected error';
@@ -310,48 +310,40 @@ class ProductController extends GetxController {
     required int productId,
   }) async {
     isMyProduct.value = false;
-    // isLoading.value = true;
+
     if (myUserId == 0) {
       await _profileController.fetchProfileData();
     }
+
     try {
       final response = await _apiClient.get(
-        ApiEndpoints.productDetails +
-            productId
-                .toString(), // Make sure this endpoint exists in ApiEndpoints
+        ApiEndpoints.productDetails + productId.toString(),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         productDetails.value = response.data;
-        print("my user id= $myUserId");
         if (productDetails['product']['seller_id'] == myUserId) {
           isMyProduct.value = true;
-          print("Its my product");
         }
         update();
         return;
       }
 
       if (response.statusCode == 400) {
-        Get.snackbar('Failed', 'Request already sent');
+        Get.snackbar('Failed', 'Bad request');
       } else {
-        Get.snackbar('Error', 'Failed to send request');
+        Get.snackbar('Error', 'Failed to fetch product details');
       }
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Unexpected error';
       Get.snackbar('Error', msg);
-    } finally {
-      isLoading.value = false;
     }
   }
 
   Future<void> getRequestReceivedChart() async {
     isLoading.value = true;
     try {
-      final response = await _apiClient.get(
-        ApiEndpoints
-            .requestReceived, // Make sure this endpoint exists in ApiEndpoints
-      );
+      final response = await _apiClient.get(ApiEndpoints.requestReceived);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         requestReceivedChart.value = response.data;
@@ -362,7 +354,7 @@ class ProductController extends GetxController {
       if (response.statusCode == 400) {
         Get.snackbar('Failed', 'Request already sent');
       } else {
-        Get.snackbar('Error', 'Failed to send request');
+        Get.snackbar('Error', 'Failed to fetch chart');
       }
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Unexpected error';
@@ -375,10 +367,7 @@ class ProductController extends GetxController {
   Future<void> getReceivedRequest() async {
     isLoading.value = true;
     try {
-      final response = await _apiClient.get(
-        ApiEndpoints
-            .receivedRequested, // Make sure this endpoint exists in ApiEndpoints
-      );
+      final response = await _apiClient.get(ApiEndpoints.receivedRequested);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         receivedRequestChart.value = response.data;
@@ -389,11 +378,48 @@ class ProductController extends GetxController {
       if (response.statusCode == 400) {
         Get.snackbar('Failed', 'Request already sent');
       } else {
-        Get.snackbar('Error', 'Failed to send request');
+        Get.snackbar('Error', 'Failed to fetch received requests');
       }
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Unexpected error';
       Get.snackbar('Error', msg);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  void searchProduct({String query = ''}) {
+    if (query.isEmpty) {
+      filteredProducts.value = allProducts;
+      return;
+    }
+
+    final lowerQuery = query.toLowerCase();
+
+    filteredProducts.value = allProducts.where((product) {
+      final title = (product['title'] ?? '').toString().toLowerCase();
+      final description =
+          (product['description'] ?? '').toString().toLowerCase();
+      return title.contains(lowerQuery) || description.contains(lowerQuery);
+    }).toList();
+  }
+
+  Future<void> getProductsByCategory(String category) async {
+    try {
+      isLoading.value = true;
+      final response = await _apiClient.get(
+        '${ApiEndpoints.productsByCategory}?category=$category',
+      );
+
+      if (response.statusCode == 200) {
+        categoryProducts.value = response.data;
+      } else {
+        categoryProducts.value = [];
+        Get.snackbar('Error', 'Failed to fetch products');
+      }
+    } catch (e) {
+      categoryProducts.value = [];
+      Get.snackbar('Error', e.toString());
     } finally {
       isLoading.value = false;
     }

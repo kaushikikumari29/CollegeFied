@@ -43,6 +43,7 @@ class _ChartsListState extends State<ChartsList> {
         itemBuilder: (context, index) {
           return GestureDetector(
             onTap: () {
+              print( _chartController.chartsList[index]);
               Get.toNamed(AppRoutes.chat,
                   arguments: [
                     _chartController.chartsList[index]['product_name'],

@@ -6,6 +6,7 @@ import 'package:collegefied/modules/auth/views/verify_email_page.dart';
 import 'package:collegefied/modules/auth/views/forgot_password_page.dart';
 import 'package:collegefied/modules/auth/views/otp_page.dart';
 import 'package:collegefied/modules/auth/views/reset_password_page.dart';
+import 'package:collegefied/modules/category/views/category_view.dart';
 import 'package:collegefied/modules/chat/views/charts_list.dart';
 
 import 'package:collegefied/modules/chat/views/manage_request_page.dart';
@@ -115,6 +116,12 @@ class AppPages {
       name: AppRoutes.history,
       page: () => HistoryPage(),
       binding: HistoryBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.categoryProducts,
+      page: () => CategoryPage(
+          category:
+              Get.arguments), // <-- This expects a string in Get.arguments
     ),
   ];
 }

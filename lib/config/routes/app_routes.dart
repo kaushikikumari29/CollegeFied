@@ -24,4 +24,5 @@ class AppRoutes {
   static const changePassword = '/change-password';
 
   static const history = '/history';
+  static const  categoryProducts = '/category-products';
 }

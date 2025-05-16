@@ -122,6 +122,7 @@ class _ChatPageState extends State<ChatPage> {
               }
 
               return AnimatedList(
+                
                 key: _chartController.listKey,
                 reverse: true,
                 padding: const EdgeInsets.symmetric(vertical: 10),

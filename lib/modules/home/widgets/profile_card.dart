@@ -19,6 +19,7 @@ class ProfileCard extends StatelessWidget {
             child: InkWell(
               child: Icon(
                 Icons.notes,
+                size: 30,
               ),
               onTap: () {
                 Scaffold.of(context).openDrawer(); // Open the drawer

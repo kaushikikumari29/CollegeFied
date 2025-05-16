@@ -15,6 +15,7 @@ class AppStrings {
   static const String email = "Email";
   static const String emailHint = "Enter your email address";
   static const String password = "Password";
+  static const String currentPassoword = "Current Password";
   static const String passwordHint = "Enter your password";
   static const String confirmPassword = "Confirm Password";
   static const String confirmPasswordHint = "Confirm your password";
